@@ -20,7 +20,7 @@ const database = new sqlite3.Database('bot.db', (err) => {
             // Create settings table
             database.run(`CREATE TABLE IF NOT EXISTS settings (
                 options TEXT PRIMARY KEY,
-                value TEXT
+                value TEXT UNIQUE
             )`);
         });
     }

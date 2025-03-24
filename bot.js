@@ -27,12 +27,17 @@ client.on('messageCreate', async message => {
     if (message.content.startsWith('!numbergame')) {
         database.get('SELECT value FROM settings WHERE options = ?', ['NUMBER_GAME_CHANNEL'], (err, row) => {
             if (err) {
-                console.error("請先設定頻道ID");
                 return;
             }
+            console.log('the value is '+ row);
+            if (row === undefined) {
+                console.error("請先設定頻道ID");
+                message.reply('請先設定頻道ID');
+            } else {
             if (message.channel.id === `${row.value}` ) {
                 console.log(row);
                 startGame(message);
+            }
             }
         });
     }
@@ -40,14 +45,18 @@ client.on('messageCreate', async message => {
     if (message.content.startsWith('!vocabgame')) {
         database.get('SELECT value FROM settings WHERE options = ?', ['VOCAB_GAME_CHANNEL'], (err, row) => {
             if (err) {
-                console.error("請先設定頻道ID");
                 return;
             }
-            console.log(row);
+            console.log('the value is '+ row);
+            if (row === undefined) {
+                console.error("請先設定頻道ID");
+                message.reply('請先設定頻道ID');
+            } else {
             if (message.channel.id === `${row.value}` ) {
                 console.log(row);
                 startVocabGame(message);
             }
+        }
         });
     }
 
@@ -65,10 +74,10 @@ client.on('messageCreate', async message => {
         }
         try {
             await setMultipleSetting('NUMBER_GAME_CHANNEL', content)
-            message.reply('Bot settings configured successfully!');
+            message.reply('機器人設置成功！');
         } catch (error) {
             console.error('Error configuring settings:', error);
-            message.reply('Failed to configure bot settings.');
+            message.reply('請不要把猜數字跟猜詞語設定在同一個頻道！');
         }
     }
 
@@ -80,10 +89,10 @@ client.on('messageCreate', async message => {
         }
         try {
             await setMultipleSetting('VOCAB_GAME_CHANNEL', content)
-            message.reply('Bot settings configured successfully!');
+            message.reply('機器人設置成功！');
         } catch (error) {
             console.error('Error configuring settings:', error);
-            message.reply('Failed to configure bot settings.');
+            message.reply('請不要把猜數字跟猜詞語設定在同一個頻道！');
         }
     }
 
@@ -96,6 +105,10 @@ client.on('messageCreate', async message => {
                 console.error("請先設定頻道ID");
                 return;
             }
+            console.log('the value is '+ row);
+            if (row === undefined) {
+                console.error("請先設定頻道ID");
+            } else {
             if (message.channel.id === `${row.value}` ) {
                 console.log(row);
                 handleVocabGuess(message)
@@ -113,6 +126,7 @@ client.on('messageCreate', async message => {
                         console.log(row.message_count);
                     });
             }
+          }
         });
     }
 });
