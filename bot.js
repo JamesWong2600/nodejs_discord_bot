@@ -2,11 +2,12 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, 'token', '.env') });
 const { Client, GatewayIntentBits } = require('discord.js');
 const { startGame, handleGuess, cache } = require('./src/numbergame');
-const { showPoints } = require('./src/showPoints');
+const { showPoints } = require('./src/showpoints.js');
 const { database }  = require('./src/database');
 const { startVocabGame, handleVocabGuess } = require('./src/vocab');
 const { LevelUp } = require('./src/LevelUp');
 const { setMultipleSetting } = require('./src/setMultipleSetting');
+const { Help } = require('./src/help');
 
 const client = new Client({
     intents: [
@@ -99,6 +100,12 @@ client.on('messageCreate', async message => {
     if (message.content.startsWith('!points')) {
         showPoints(message);
     }
+
+    if (message.content.startsWith('!help')) {
+        Help(message);
+    }
+
+
     else{
         database.get('SELECT value FROM settings WHERE options = ?', ['VOCAB_GAME_CHANNEL'], (err, row) => {
             if (err) {
