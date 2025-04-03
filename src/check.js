@@ -1,14 +1,13 @@
 const { database } = require('./database');
-const { detectLevelUp } = require('./detectLevelUp');
+const { detectLevel } = require('./detectLevel');
 const { Client, GatewayIntentBits } = require('discord.js');
 
-
-function LevelUp(message) {
+function Check(message) {
     database.get('SELECT message_count FROM users WHERE user_id = ?',
         [message.author.id],
         (err, row) => {
             const point = row ? row.message_count : 0;
-            return_value = detectLevelUp(point);
+            return_value = detectLevel(point);
             console.log(point);
             console.log(return_value);
             if (!(return_value === 'nothing')) {
@@ -17,10 +16,10 @@ function LevelUp(message) {
                 message.reply('Error getting stats!');
             } else {
                 const point = row ? row.message_count : 0;
-                const result = detectLevelUp(point);
+                const result = detectLevel(point);
                 const embed = {
                     color: 0x0099ff,
-                    title: '🎮 恭喜升級',
+                    title: '🎮 使用者分數',
                     description: `使用者: ${message.author.username}`,
                     fields: [
                         {
@@ -41,4 +40,4 @@ function LevelUp(message) {
     });
 }
 
-module.exports = { LevelUp };
+module.exports = { Check };

@@ -1,6 +1,6 @@
 const SimpleCache = require('./SimpleCache');
-const db = require('./database');
-
+const { database } = require('./database');
+const { Client, GatewayIntentBits } = require('discord.js');
 const cache = new SimpleCache();
 
 function startGame(message) {
@@ -16,7 +16,7 @@ function startGame(message) {
 function handleGuess(message) {
     const number = Number(message.content);
     if (number === cache.get('numbertoguess')) {
-        message.reply('恭喜你猜對了！，已獲得 1 分！');
+        message.reply('恭喜你猜對了！，已獲得 10 分！');
         updateUserScore(message);
         cache.delete('numbergamestart');
         cache.delete('numbertoguess');
@@ -30,10 +30,10 @@ function handleGuess(message) {
 }
 
 function updateUserScore(message) {
-    db.run(`INSERT INTO users (user_id, username, message_count) 
-        VALUES (?, ?, 1) 
+    database.run(`INSERT INTO users (user_id, username, message_count) 
+        VALUES (?, ?, 10) 
         ON CONFLICT(user_id) 
-        DO UPDATE SET message_count = message_count + 3, username = ?`,
+        DO UPDATE SET message_count = message_count + 10, username = ?`,
     [message.author.id, message.author.username, message.author.username]);
 }
 
