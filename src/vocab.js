@@ -43,7 +43,7 @@ function handleVocabGuess(message) {
             cache.set('charlist', charlist.join(''), 3600);
             cache.set('hidden_charlist', hidden_charlist.join(''), 3600);
             if(theword === hidden_charlist.join('')){
-                message.reply('你已經猜對了！已獲得17分！');
+                message.reply('你已經猜對了！已獲得20分！');
                 cache.delete('vocabgamestart');
                 cache.delete('charlist');
                 cache.delete('hidden_charlist');
@@ -64,11 +64,10 @@ function handleVocabGuess(message) {
 }
 
 function updateVocabUserScore(message) {
-    database.run(`INSERT INTO users (user_id, username, message_count) 
-        VALUES (?, ?, 17) 
-        ON CONFLICT(user_id) 
-        DO UPDATE SET message_count = message_count + 17, username = ?`,
-    [message.author.id, message.author.username, message.author.username]);
+    database.prepare(`INSERT INTO users (user_id, username, message_count) 
+    VALUES ('${message.author.id}', '${message.author.username}', 20) 
+    ON CONFLICT(user_id) 
+    DO UPDATE SET message_count = message_count + 20, username = '${message.author.username}'`).run();
 }
 
 module.exports = {

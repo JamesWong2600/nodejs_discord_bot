@@ -30,11 +30,10 @@ function handleGuess(message) {
 }
 
 function updateUserScore(message) {
-    database.run(`INSERT INTO users (user_id, username, message_count) 
-        VALUES (?, ?, 10) 
+    database.prepare(`INSERT INTO users (user_id, username, message_count) 
+        VALUES ('${message.author.id}', '${message.author.username}', 10) 
         ON CONFLICT(user_id) 
-        DO UPDATE SET message_count = message_count + 10, username = ?`,
-    [message.author.id, message.author.username, message.author.username]);
+        DO UPDATE SET message_count = message_count + 10, username = '${message.author.username}'`).run();
 }
 
 module.exports = {

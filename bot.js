@@ -29,43 +29,31 @@ const client = new Client({
 
 client.once('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
-    database.get(`SELECT 
+    try{
+        const row = database.prepare(`SELECT 
         (SELECT value FROM settings WHERE options = 'ADMIN_ID') as admin_id,
-        (SELECT value FROM settings WHERE options = 'BOT_NAME') as bot_name`, [], (err, row) => {
-        if (err) {
-            return;
-        }
+        (SELECT value FROM settings WHERE options = 'BOT_NAME') as bot_name`).get();
+        console.log(row.admin_id);
+        console.log(row.bot_name);
         if (row.admin_id === null) {
             //rl.question('請提供佩佩豬擁有者的DCID: ', (answer) => {
             const name = prompt('請提供機器人擁有者的DCID: ');
             //console.log(`Hello, ${name}!`);   
-            database.run('UPDATE settings SET value = ? WHERE options = ?', [name, 'ADMIN_ID'])
+            database.prepare(`UPDATE settings SET value = '${name}' WHERE options = 'ADMIN_ID'`).run();
             console.log(`已設置擁有者的DCID: ${name}`);
         }
         if (row.bot_name === null) {
             //rl.question('請提供佩佩豬擁有者的DCID: ', (answer) => {
             const name2 = prompt('請提供機器人的名稱: ');
-            database.run('UPDATE settings SET value = ? WHERE options = ?', [name2, 'BOT_NAME'])
+            database.prepare(`UPDATE settings SET value = '${name2}' WHERE options = 'BOT_NAME'`).run();
             console.log(`已設置機器人的名稱: ${name2}`);
             //rl.close();
             //});
         }
-    });
-    `database.get('SELECT value FROM settings WHERE options = ?', ['BOT_NAME'], (err, row) => {
-        if (err) {
-            return;
-        }
-        console.log('the value is '+ row.value);
-        if (row.value === null) {
-            //rl.question('請提供佩佩豬擁有者的DCID: ', (answer) => {
-            const name2 = prompt('請提供機器人的名稱: ');
-            //console.log(Hello, name!);   
-            database.run('UPDATE settings SET value = ? WHERE options = ?', [name2, 'BOT_NAME'])
-            console.log(已設置機器人的名稱: name2);
-            //rl.close();
-            //});
-        }
-    });`
+    }catch (error) {
+        console.error('Error creating tables:', error);
+        return;
+    }
 });
 
 
@@ -75,18 +63,14 @@ client.on('messageCreate', async message => {
 
     
     else if (message.content.startsWith('!numbergame')) {
-        gamestatus = cache.get('numbergamestart');
+        let gamestatus = cache.get('numbergamestart');
         if (gamestatus === true) {
-            message.reply('遊戲已經開始了！');
-            message.delete();
+            //message.reply('遊戲已經開始了！');
             return;
         }
-        database.get(`SELECT (SELECT value FROM settings WHERE options = ?) as number_game_channel`, ['NUMBER_GAME_CHANNEL'], (err, row) => {
-            if (err) {
-                console.error('Error fetching number game channel ID:', err);
-                return;
-            }
-            console.log('the value iss '+ row.number_game_channel);
+        try{
+            const row = database.prepare(`SELECT (SELECT value FROM settings WHERE options = 'NUMBER_GAME_CHANNEL') 
+                as number_game_channel`).get();
             if (row.number_game_channel === null) {
                 console.error("請先設定頻道ID");
                 message.reply('請先設定頻道ID');
@@ -97,21 +81,22 @@ client.on('messageCreate', async message => {
                 return;
             }
             }
-        });
+        }catch (error) {
+            console.error('Error fetching number game channel ID:', err);
+            return;
+        }
+
     }
 
     else if (message.content.startsWith('!vocabgame')) {
-        gamestatus = cache.get('vocabgamestart');
-        if (gamestatus === true) {
-            message.reply('遊戲已經開始了！');
-            message.delete();
+        let vocabgamestatus = cache.get('vocabgamestart');
+        if (vocabgamestatus === true) {
+            //message.reply('遊戲已經開始了！');
             return;
         }
-        database.get(`SELECT (SELECT value FROM settings WHERE options = ?) as vocab_game_channel`, ['VOCAB_GAME_CHANNEL'], (err, row) => {
-            if (err) {
-                return;
-            }
-            console.log('the value iss '+ row.vocab_game_channel);
+        try{
+            const row = database.prepare(`SELECT (SELECT value FROM settings WHERE options = 'VOCAB_GAME_CHANNEL') 
+                as vocab_game_channel`).get();
             if (row.vocab_game_channel === null) {
                 console.error("請先設定頻道ID");
                 message.reply('請先設定頻道ID');
@@ -121,19 +106,24 @@ client.on('messageCreate', async message => {
                 startVocabGame(message);
                 return;
             }
+            }
+        }catch (error) {
+            console.error('Error fetching number game channel ID:', err);
+            return;
+
+
         }
-        });
     }
+
+    
 
 
 
     else if (message.content.startsWith('!number_game_channel_id')) {
-        database.get(`SELECT (SELECT value FROM settings WHERE options = 'ADMIN_ID') as admin_id,
-            (SELECT value FROM settings WHERE options = 'BOT_NAME') as bot_name`, [], (err, row) => {
-            if (err) {
-                console.error('Error fetching admin ID:', err);
-                return;
-            }
+        try{
+        const row = database.prepare(`SELECT 
+            (SELECT value FROM settings WHERE options = 'ADMIN_ID') as admin_id,
+            (SELECT value FROM settings WHERE options = 'BOT_NAME') as bot_name`).get();
             if (message.author.id !== row.admin_id) {
                 message.reply(`你不是${row.bot_name}的擁有者，無法使用此指令！`);
                 return;
@@ -145,37 +135,30 @@ client.on('messageCreate', async message => {
                     return;
                 }
                 try {
-                    database.run(
-                        'UPDATE settings SET value = ? WHERE options = ?',
-                        [content, 'NUMBER_GAME_CHANNEL'],
-                        function(err) {
-                            if (err) {
-                                //console.log(err);
-                                //console.error("請不要重複設定同一個頻道ID");
-                                message.reply('請不要把猜數字跟猜詞語設定在同一個頻道！');
-                                return;
-                            }
-                            else{
-                                message.reply('機器人設置成功！');
-                                return;
-                            }
-                        }
-                    );
-                    //setMultipleSetting('NUMBER_GAME_CHANNEL', content)
+                    const row = database.prepare(`UPDATE settings SET value = '${content}'
+                        WHERE options = 'NUMBER_GAME_CHANNEL'`,).run();
+                    message.reply('機器人設置成功！');
+                    return;
                 } catch (error) {
                     console.error('Error configuring settings:', error);
+                    message.reply('請不要把猜數字跟猜詞語設定在同一個頻道！');
+                    return;
                 }
             }
-        });
+        }catch (error) {
+            console.error('Error fetching admin ID:', err);
+            return;
+        }
+
+
 
     }
 
     else if (message.content.startsWith('!vocab_game_channel_id')) {
-        database.get(`SELECT (SELECT value FROM settings WHERE options = 'ADMIN_ID') as admin_id,
-            (SELECT value FROM settings WHERE options = 'BOT_NAME') as bot_name`, [], (err, row) => {
-            if (err) {
-                return;
-            }
+        try{
+            const row = database.prepare(`SELECT 
+                (SELECT value FROM settings WHERE options = 'ADMIN_ID') as admin_id,
+                (SELECT value FROM settings WHERE options = 'BOT_NAME') as bot_name`).get();
             if (message.author.id !== row.admin_id) {
                 message.reply(`你不是${row.bot_name}的擁有者，無法使用此指令！`);
                 return;
@@ -187,28 +170,22 @@ client.on('messageCreate', async message => {
                     return;
                 }
                 try {
-                    database.run(
-                        'UPDATE settings SET value = ? WHERE options = ?',
-                        [content, 'VOCAB_GAME_CHANNEL'],
-                        function(err) {
-                            if (err) {
-                                console.error("請不要重複設定同一個頻道ID");
-                                message.reply('請不要把猜數字跟猜詞語設定在同一個頻道！');
-                                return;
-                            }
-                            else{
-                                message.reply('機器人設置成功！');
-                                return;
-                            }
-                        }
-                    );
+                    const row =  database.prepare(`UPDATE settings SET value =
+                         '${content}' WHERE options = 'VOCAB_GAME_CHANNEL'`,).run();
+                    message.reply('機器人設置成功！');
+                    return;
                 } catch (error) {
-                    console.error('Error configuring settings:', error);
+                    console.error("請不要重複設定同一個頻道ID");
+                    message.reply('請不要把猜數字跟猜詞語設定在同一個頻道！');
+                    return;
                 }
             }
-        });
 
-    }
+        }catch (error) {
+            return;
+        } 
+    }    
+    
 
     else if (message.content.startsWith('!points')) {
         showPoints(message);
@@ -226,13 +203,9 @@ client.on('messageCreate', async message => {
     }
 
     else{
-        database.get(`SELECT (SELECT value FROM settings WHERE options = ? ) as vocab_game_channel,
-            (SELECT value FROM settings WHERE options = ? ) as number_game_channel`, ['VOCAB_GAME_CHANNEL','NUMBER_GAME_CHANNEL'], (err, row) => {
-            if (err) {
-                console.error("請先設定頻道ID");
-                return;
-            }
-            console.log('the value is '+ row);
+        try{
+        const row = database.prepare(`SELECT (SELECT value FROM settings WHERE options = 'VOCAB_GAME_CHANNEL' ) as vocab_game_channel,
+            (SELECT value FROM settings WHERE options = 'NUMBER_GAME_CHANNEL' ) as number_game_channel`).get();
             if (row === undefined) {
                 console.error("請先設定頻道ID");
                 return;
@@ -252,20 +225,17 @@ client.on('messageCreate', async message => {
                 return;
             }
             else{
-                database.run(`INSERT INTO users (user_id, username, message_count) 
-                    VALUES (?, ?, 1) 
+                database.prepare(`INSERT INTO users (user_id, username, message_count) 
+                    VALUES ('${message.author.id}', '${message.author.username}', 1) 
                     ON CONFLICT(user_id) 
-                    DO UPDATE SET message_count = message_count + 1, username = ?`,
-                [message.author.id, message.author.username, message.author.username]);
+                    DO UPDATE SET message_count = message_count + 1, username = '${message.author.username}'`).run();
                 LevelUp(message);
-                database.get('SELECT message_count FROM users WHERE user_id = ?',
-                    [message.author.id],
-                    (err, row) => {
-                        //console.log(row.message_count);
-                    });
             }
-          }
-        });
+        }
+        }catch (error) {
+            console.error("請先設定頻道ID");
+            return;
+        } 
     }
 });
 
