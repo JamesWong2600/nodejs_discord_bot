@@ -1,11 +1,10 @@
 {
   "dependencies": {
-    "better-sqlite3": "^11.9.1",
     "discord.js": "^14.18.0",
     "dotenv": "^16.4.7",
     "prompt-sync": "^4.2.0",
     "random-words": "^2.0.1",
-    "sqlite3": "^5.1.7",
-    "word-list-json": "^0.2.0"
+    "word-list-json": "^0.2.0",
+    "better-sqlite3": "^11.9.1"
   }
 }

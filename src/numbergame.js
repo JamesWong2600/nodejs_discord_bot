@@ -20,7 +20,14 @@ function handleGuess(message) {
         updateUserScore(message);
         cache.delete('numbergamestart');
         cache.delete('numbertoguess');
-    } else if (number < cache.get('numbertoguess')) {
+    } 
+    else if (number > cache.get('upperlimit')){
+        message.reply(`超出範圍`);
+    }
+    else if (number < cache.get('lowerlimit')){
+        message.reply(`超出範圍`);
+    }
+    else if (number < cache.get('numbertoguess')) {
         cache.set('lowerlimit', number, 3600);
         message.reply(`${number}~${cache.get('upperlimit')}之間的數字！`);
     } else {
